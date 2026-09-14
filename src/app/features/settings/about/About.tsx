@@ -7,6 +7,7 @@ import { SettingTile } from '../../../components/setting-tile';
 import CinnySVG from '../../../../../public/res/svg/cinny.svg';
 import { clearCacheAndReload } from '../../../../client/initMatrix';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
+import { APP_NAME } from '../../../branding';
 
 type AboutProps = {
   requestClose: () => void;
@@ -39,22 +40,22 @@ export function About({ requestClose }: AboutProps) {
                   <img
                     style={{ width: toRem(60), height: toRem(60) }}
                     src={CinnySVG}
-                    alt="Cinny logo"
+                    alt={`${APP_NAME} logo`}
                   />
                 </Box>
                 <Box direction="Column" gap="300">
                   <Box direction="Column" gap="100">
                     <Box gap="100" alignItems="End">
-                      <Text size="H3">Cinny</Text>
+                      <Text size="H3">{APP_NAME}</Text>
                       <Text size="T200">v4.12.6</Text>
                     </Box>
-                    <Text>Yet another matrix client.</Text>
+                    <Text>Plauder.Party Matrix client.</Text>
                   </Box>
 
                   <Box gap="200" wrap="Wrap">
                     <Button
                       as="a"
-                      href="https://github.com/cinnyapp/cinny"
+                      href="https://github.com/plauderparty/cinny"
                       rel="noreferrer noopener"
                       target="_blank"
                       variant="Secondary"
@@ -67,7 +68,7 @@ export function About({ requestClose }: AboutProps) {
                     </Button>
                     <Button
                       as="a"
-                      href="https://cinny.in/#sponsor"
+                      href="https://plauder.party"
                       rel="noreferrer noopener"
                       target="_blank"
                       variant="Critical"
@@ -76,7 +77,7 @@ export function About({ requestClose }: AboutProps) {
                       radii="300"
                       before={<Icon src={Icons.Heart} size="100" filled />}
                     >
-                      <Text size="B300">Support</Text>
+                      <Text size="B300">Website</Text>
                     </Button>
                   </Box>
                 </Box>

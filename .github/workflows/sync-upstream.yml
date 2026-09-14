@@ -1,0 +1,138 @@
+name: Sync upstream release
+
+on:
+  schedule:
+    # Daily check for new cinnyapp/cinny releases
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Optional upstream release tag to sync (default: latest)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  sync:
+    name: Merge upstream release into plauder
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plauder
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: plauder
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve target upstream tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_TAG:-}" ]; then
+            TAG="$INPUT_TAG"
+          else
+            TAG="$(gh api repos/cinnyapp/cinny/releases/latest --jq .tag_name)"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Resolved upstream tag: $TAG"
+
+      - name: Check whether plauder already contains the tag
+        id: check
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/cinnyapp/cinny.git
+          git fetch upstream --tags
+          if git merge-base --is-ancestor "refs/tags/$TAG" HEAD; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+            echo "plauder already contains $TAG — nothing to do."
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+            echo "plauder is behind $TAG — will open sync PR."
+          fi
+
+      - name: Create sync branch and merge
+        id: merge
+        if: steps.check.outputs.already == 'false'
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH="sync/$TAG"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Drop stale remote sync branch if present
+          git push origin --delete "$BRANCH" 2>/dev/null || true
+          git checkout -B "$BRANCH"
+
+          if git merge --no-ff "refs/tags/$TAG" -m "chore: merge upstream $TAG into plauder"; then
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+            git push -u origin "$BRANCH" --force-with-lease
+          else
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            git merge --abort || true
+            # Push the branch tip (plauder) so the issue can link it; conflict must be fixed locally
+            git push -u origin "$BRANCH" --force-with-lease || true
+            TITLE="Upstream $TAG failed to merge into plauder"
+            BODY="$(cat <<EOF
+          Automatic merge of \`cinnyapp/cinny\` release \`$TAG\` into \`plauder\` conflicted.
+
+          Resolve locally:
+
+          \`\`\`sh
+          git fetch upstream --tags
+          git checkout plauder
+          git pull
+          git merge $TAG
+          # fix conflicts (theme/branding files), then:
+          git push origin plauder
+          \`\`\`
+
+          Do **not** use GitHub "Sync fork" — it tracks upstream \`dev\`, not releases.
+          EOF
+          )"
+            # Avoid duplicate open issues for the same tag
+            EXISTING="$(gh issue list --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')"
+            if [ -z "$EXISTING" ]; then
+              gh issue create --title "$TITLE" --body "$BODY"
+            else
+              echo "Issue #$EXISTING already open for this conflict."
+            fi
+            exit 1
+          fi
+
+      - name: Open or update pull request
+        if: steps.check.outputs.already == 'false' && steps.merge.outputs.conflict == 'false'
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH="sync/$TAG"
+          TITLE="Sync Cinny $TAG"
+          BODY="$(cat <<EOF
+          ## Summary
+          - Merge upstream release \`$TAG\` from \`cinnyapp/cinny\` into \`plauder\`
+          - Preserves Plauder theme/branding commits
+
+          ## After merge
+          On production: \`/etc/docker/matrix.plauder.party/update-cinny.sh\`
+          EOF
+          )"
+          EXISTING="$(gh pr list --head "$BRANCH" --base plauder --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$EXISTING" ]; then
+            echo "PR #$EXISTING already open."
+            gh pr edit "$EXISTING" --title "$TITLE" --body "$BODY"
+          else
+            gh pr create --base plauder --head "$BRANCH" --title "$TITLE" --body "$BODY"
+          fi

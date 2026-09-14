@@ -24,8 +24,10 @@ import {
 import { NotificationType, UnreadInfo } from '../../../types/matrix/room';
 import { getMxIdLocalPart, mxcUrlToHttp } from '../../utils/matrix';
 import { useSelectedRoom } from '../../hooks/router/useSelectedRoom';
+import { useSelectedSpace } from '../../hooks/router/useSelectedSpace';
 import { useInboxNotificationsSelected } from '../../hooks/router/useInbox';
 import { useMediaAuthentication } from '../../hooks/useMediaAuthentication';
+import { documentTitleFor } from '../../branding';
 
 function SystemEmojiFeature() {
   const [twitterEmoji] = useSetting(settingsAtom, 'twitterEmoji');
@@ -72,6 +74,35 @@ function FaviconUpdater() {
       setFavicon(LogoSVG);
     }
   }, [roomToUnread]);
+
+  return null;
+}
+
+function DocumentTitleUpdater() {
+  const mx = useMatrixClient();
+  const selectedRoomId = useSelectedRoom();
+  const selectedSpaceId = useSelectedSpace();
+  const contextId = selectedRoomId ?? selectedSpaceId;
+
+  useEffect(() => {
+    if (!contextId) {
+      document.title = documentTitleFor();
+      return undefined;
+    }
+
+    const room = mx.getRoom(contextId);
+    document.title = documentTitleFor(room?.name);
+
+    if (!room) return undefined;
+
+    const handleRoomNameChange: RoomEventHandlerMap[RoomEvent.Name] = () => {
+      document.title = documentTitleFor(room.name);
+    };
+    room.on(RoomEvent.Name, handleRoomNameChange);
+    return () => {
+      room.removeListener(RoomEvent.Name, handleRoomNameChange);
+    };
+  }, [mx, contextId]);
 
   return null;
 }
@@ -263,6 +294,7 @@ export function ClientNonUIFeatures({ children }: ClientNonUIFeaturesProps) {
       <SystemEmojiFeature />
       <PageZoomFeature />
       <FaviconUpdater />
+      <DocumentTitleUpdater />
       <InviteNotifications />
       <MessageNotifications />
       {children}

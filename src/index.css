@@ -23,7 +23,8 @@
 }
 
 .dark-theme,
-.butter-theme {
+.butter-theme,
+.plauder-dark {
   --tc-link: hsl(213deg 100% 80%);
 
   --mx-uc-1: hsl(208, 100%, 75%);
@@ -36,6 +37,14 @@
   --mx-uc-8: hsl(94, 100%, 80%);
 
   --font-secondary: 'InterVariable', var(--font-emoji), sans-serif;
+}
+
+.plauder-light {
+  --tc-link: #4a9b32;
+}
+
+.plauder-dark {
+  --tc-link: #5cb03c;
 }
 
 html {

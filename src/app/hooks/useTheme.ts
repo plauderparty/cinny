@@ -2,6 +2,7 @@ import { lightTheme } from 'folds';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { onDarkFontWeight, onLightFontWeight } from '../../config.css';
 import { butterTheme, darkTheme, silverTheme } from '../../colors.css';
+import { plauderDarkTheme, plauderLightTheme } from '../../plauderTheme.css';
 import { settingsAtom } from '../state/settings';
 import { useSetting } from '../state/hooks/settings';
 
@@ -38,8 +39,23 @@ export const ButterTheme: Theme = {
   classNames: ['butter-theme', butterTheme, onDarkFontWeight, 'prism-dark'],
 };
 
+export const PlauderLightTheme: Theme = {
+  id: 'plauder-light',
+  kind: ThemeKind.Light,
+  classNames: ['plauder-light', plauderLightTheme, onLightFontWeight, 'prism-light'],
+};
+
+export const PlauderDarkTheme: Theme = {
+  id: 'plauder-dark',
+  kind: ThemeKind.Dark,
+  classNames: ['plauder-dark', plauderDarkTheme, onDarkFontWeight, 'prism-dark'],
+};
+
 export const useThemes = (): Theme[] => {
-  const themes: Theme[] = useMemo(() => [LightTheme, SilverTheme, DarkTheme, ButterTheme], []);
+  const themes: Theme[] = useMemo(
+    () => [PlauderLightTheme, PlauderDarkTheme, LightTheme, SilverTheme, DarkTheme, ButterTheme],
+    []
+  );
 
   return themes;
 };
@@ -47,6 +63,8 @@ export const useThemes = (): Theme[] => {
 export const useThemeNames = (): Record<string, string> =>
   useMemo(
     () => ({
+      [PlauderLightTheme.id]: 'Plauder Light',
+      [PlauderDarkTheme.id]: 'Plauder Dark',
       [LightTheme.id]: 'Light',
       [SilverTheme.id]: 'Silver',
       [DarkTheme.id]: 'Dark',
@@ -84,15 +102,15 @@ export const useActiveTheme = (): Theme => {
   const [darkThemeId] = useSetting(settingsAtom, 'darkThemeId');
 
   if (!systemTheme) {
-    const selectedTheme = themes.find((theme) => theme.id === themeId) ?? LightTheme;
+    const selectedTheme = themes.find((theme) => theme.id === themeId) ?? PlauderLightTheme;
 
     return selectedTheme;
   }
 
   const selectedTheme =
     systemThemeKind === ThemeKind.Dark
-      ? themes.find((theme) => theme.id === darkThemeId) ?? DarkTheme
-      : themes.find((theme) => theme.id === lightThemeId) ?? LightTheme;
+      ? themes.find((theme) => theme.id === darkThemeId) ?? PlauderDarkTheme
+      : themes.find((theme) => theme.id === lightThemeId) ?? PlauderLightTheme;
 
   return selectedTheme;
 };
