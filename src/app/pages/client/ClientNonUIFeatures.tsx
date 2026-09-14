@@ -85,22 +85,17 @@ function DocumentTitleUpdater() {
   const contextId = selectedRoomId ?? selectedSpaceId;
 
   useEffect(() => {
-    if (!contextId) {
-      document.title = documentTitleFor();
-      return undefined;
-    }
-
-    const room = mx.getRoom(contextId);
+    const room = contextId ? mx.getRoom(contextId) : null;
     document.title = documentTitleFor(room?.name);
 
     if (!room) return undefined;
 
-    const handleRoomNameChange: RoomEventHandlerMap[RoomEvent.Name] = () => {
+    const onName = () => {
       document.title = documentTitleFor(room.name);
     };
-    room.on(RoomEvent.Name, handleRoomNameChange);
+    room.on(RoomEvent.Name, onName);
     return () => {
-      room.removeListener(RoomEvent.Name, handleRoomNameChange);
+      room.removeListener(RoomEvent.Name, onName);
     };
   }, [mx, contextId]);
 

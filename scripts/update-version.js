@@ -24,12 +24,8 @@ execSync(`npm version ${version} --no-git-tag-version`, {
 
 console.log(`Updated package.json and package-lock.json → ${version}`);
 
-// Update UI version references
-const files = [
-  "src/app/features/settings/about/About.tsx",
-  "src/app/pages/auth/AuthFooter.tsx",
-  "src/app/pages/client/WelcomePage.tsx",
-];
+// Single source of UI version string for the Plauder fork
+const files = ["src/app/branding.ts"];
 
 files.forEach((filePath) => {
   const absPath = path.join(root, filePath);

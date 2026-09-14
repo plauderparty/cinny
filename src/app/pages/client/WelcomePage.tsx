@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Button, Icon, Icons, Text, config, toRem } from 'folds';
 import { Page, PageHero, PageHeroSection } from '../../components/page';
 import CinnySVG from '../../../../public/res/svg/cinny.svg';
-import { APP_NAME } from '../../branding';
+import { APP_NAME, SOURCE_URL, VERSION, WEBSITE_URL } from '../../branding';
 
 export function WelcomePage() {
   return (
@@ -20,12 +20,8 @@ export function WelcomePage() {
             subTitle={
               <span>
                 Plauder.Party Matrix client.{' '}
-                <a
-                  href="https://github.com/plauderparty/cinny/releases"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  v4.12.6
+                <a href={`${SOURCE_URL}/releases`} target="_blank" rel="noreferrer noopener">
+                  {VERSION}
                 </a>
               </span>
             }
@@ -34,7 +30,7 @@ export function WelcomePage() {
               <Box grow="Yes" style={{ maxWidth: toRem(300) }} direction="Column" gap="300">
                 <Button
                   as="a"
-                  href="https://github.com/plauderparty/cinny"
+                  href={SOURCE_URL}
                   target="_blank"
                   rel="noreferrer noopener"
                   before={<Icon size="200" src={Icons.Code} />}
@@ -45,7 +41,7 @@ export function WelcomePage() {
                 </Button>
                 <Button
                   as="a"
-                  href="https://plauder.party"
+                  href={WEBSITE_URL}
                   target="_blank"
                   rel="noreferrer noopener"
                   fill="Soft"

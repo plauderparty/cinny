@@ -1,7 +1,5 @@
-import { lightTheme } from 'folds';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { onDarkFontWeight, onLightFontWeight } from '../../config.css';
-import { butterTheme, darkTheme, silverTheme } from '../../colors.css';
 import { plauderDarkTheme, plauderLightTheme } from '../../plauderTheme.css';
 import { settingsAtom } from '../state/settings';
 import { useSetting } from '../state/hooks/settings';
@@ -17,58 +15,27 @@ export type Theme = {
   classNames: string[];
 };
 
+/** Plauder light — replaces upstream Light as the default light theme. */
 export const LightTheme: Theme = {
-  id: 'light-theme',
-  kind: ThemeKind.Light,
-  classNames: [lightTheme, onLightFontWeight, 'prism-light'],
-};
-
-export const SilverTheme: Theme = {
-  id: 'silver-theme',
-  kind: ThemeKind.Light,
-  classNames: ['silver-theme', silverTheme, onLightFontWeight, 'prism-light'],
-};
-export const DarkTheme: Theme = {
-  id: 'dark-theme',
-  kind: ThemeKind.Dark,
-  classNames: ['dark-theme', darkTheme, onDarkFontWeight, 'prism-dark'],
-};
-export const ButterTheme: Theme = {
-  id: 'butter-theme',
-  kind: ThemeKind.Dark,
-  classNames: ['butter-theme', butterTheme, onDarkFontWeight, 'prism-dark'],
-};
-
-export const PlauderLightTheme: Theme = {
   id: 'plauder-light',
   kind: ThemeKind.Light,
   classNames: ['plauder-light', plauderLightTheme, onLightFontWeight, 'prism-light'],
 };
 
-export const PlauderDarkTheme: Theme = {
+/** Plauder dark — replaces upstream Dark as the default dark theme. */
+export const DarkTheme: Theme = {
   id: 'plauder-dark',
   kind: ThemeKind.Dark,
   classNames: ['plauder-dark', plauderDarkTheme, onDarkFontWeight, 'prism-dark'],
 };
 
-export const useThemes = (): Theme[] => {
-  const themes: Theme[] = useMemo(
-    () => [PlauderLightTheme, PlauderDarkTheme, LightTheme, SilverTheme, DarkTheme, ButterTheme],
-    []
-  );
-
-  return themes;
-};
+export const useThemes = (): Theme[] => useMemo(() => [LightTheme, DarkTheme], []);
 
 export const useThemeNames = (): Record<string, string> =>
   useMemo(
     () => ({
-      [PlauderLightTheme.id]: 'Plauder Light',
-      [PlauderDarkTheme.id]: 'Plauder Dark',
       [LightTheme.id]: 'Light',
-      [SilverTheme.id]: 'Silver',
       [DarkTheme.id]: 'Dark',
-      [ButterTheme.id]: 'Butter',
     }),
     []
   );
@@ -102,17 +69,12 @@ export const useActiveTheme = (): Theme => {
   const [darkThemeId] = useSetting(settingsAtom, 'darkThemeId');
 
   if (!systemTheme) {
-    const selectedTheme = themes.find((theme) => theme.id === themeId) ?? PlauderLightTheme;
-
-    return selectedTheme;
+    return themes.find((theme) => theme.id === themeId) ?? LightTheme;
   }
 
-  const selectedTheme =
-    systemThemeKind === ThemeKind.Dark
-      ? themes.find((theme) => theme.id === darkThemeId) ?? PlauderDarkTheme
-      : themes.find((theme) => theme.id === lightThemeId) ?? PlauderLightTheme;
-
-  return selectedTheme;
+  return systemThemeKind === ThemeKind.Dark
+    ? themes.find((theme) => theme.id === darkThemeId) ?? DarkTheme
+    : themes.find((theme) => theme.id === lightThemeId) ?? LightTheme;
 };
 
 const ThemeContext = createContext<Theme | null>(null);

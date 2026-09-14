@@ -7,7 +7,7 @@ import { SettingTile } from '../../../components/setting-tile';
 import CinnySVG from '../../../../../public/res/svg/cinny.svg';
 import { clearCacheAndReload } from '../../../../client/initMatrix';
 import { useMatrixClient } from '../../../hooks/useMatrixClient';
-import { APP_NAME } from '../../../branding';
+import { APP_NAME, SOURCE_URL, VERSION, WEBSITE_URL } from '../../../branding';
 
 type AboutProps = {
   requestClose: () => void;
@@ -47,7 +47,7 @@ export function About({ requestClose }: AboutProps) {
                   <Box direction="Column" gap="100">
                     <Box gap="100" alignItems="End">
                       <Text size="H3">{APP_NAME}</Text>
-                      <Text size="T200">v4.12.6</Text>
+                      <Text size="T200">{VERSION}</Text>
                     </Box>
                     <Text>Plauder.Party Matrix client.</Text>
                   </Box>
@@ -55,7 +55,7 @@ export function About({ requestClose }: AboutProps) {
                   <Box gap="200" wrap="Wrap">
                     <Button
                       as="a"
-                      href="https://github.com/plauderparty/cinny"
+                      href={SOURCE_URL}
                       rel="noreferrer noopener"
                       target="_blank"
                       variant="Secondary"
@@ -68,7 +68,7 @@ export function About({ requestClose }: AboutProps) {
                     </Button>
                     <Button
                       as="a"
-                      href="https://plauder.party"
+                      href={WEBSITE_URL}
                       rel="noreferrer noopener"
                       target="_blank"
                       variant="Critical"
