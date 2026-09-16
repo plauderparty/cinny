@@ -11,7 +11,9 @@ import {
   ClientWidgetApi,
   IRoomEvent,
   IWidget,
+  IWidgetApiRequest,
   Widget,
+  WidgetApiFromWidgetAction,
   WidgetApiToWidgetAction,
   WidgetDriver,
 } from 'matrix-widget-api';
@@ -181,12 +183,28 @@ export class CallEmbed {
     let initialMediaEvent = true;
     this.disposables.push(
       this.listenAction<ElementMediaStateDetail>(ElementWidgetActions.DeviceMute, (evt) => {
+        evt.preventDefault();
         if (initialMediaEvent) {
           initialMediaEvent = false;
           this.control.applyState();
-          return;
+        } else {
+          this.control.onMediaState(evt);
         }
-        this.control.onMediaState(evt);
+        this.call.transport.reply(evt.detail as IWidgetApiRequest, {});
+      }),
+      this.listenAction(ElementWidgetActions.HangupCall, (evt) => {
+        evt.preventDefault();
+        this.call.transport.reply(evt.detail as IWidgetApiRequest, {});
+        this.joined = false;
+      }),
+      this.listenAction(ElementWidgetActions.Close, (evt) => {
+        evt.preventDefault();
+        this.call.transport.reply(evt.detail as IWidgetApiRequest, {});
+        this.joined = false;
+      }),
+      this.listenAction(WidgetApiFromWidgetAction.UpdateAlwaysOnScreen, (evt) => {
+        evt.preventDefault();
+        this.call.transport.reply(evt.detail as IWidgetApiRequest, {});
       })
     );
 
@@ -275,7 +293,9 @@ export class CallEmbed {
     this.eventsToFeed = new WeakSet<MatrixEvent>();
   }
 
-  private onCallJoined(): void {
+  private onCallJoined(evt: CustomEvent): void {
+    evt.preventDefault();
+    this.call.transport.reply(evt.detail as IWidgetApiRequest, {});
     this.joined = true;
   }
 
