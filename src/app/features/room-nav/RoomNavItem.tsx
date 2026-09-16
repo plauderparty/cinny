@@ -57,8 +57,7 @@ import { useCallMembers, useCallSession } from '../../hooks/useCall';
 import { useCallEmbed, useCallStart } from '../../hooks/useCallEmbed';
 import { callChatAtom } from '../../state/callEmbed';
 import { useCallPreferencesAtom } from '../../state/hooks/callPreferences';
-import { useAutoDiscoveryInfo } from '../../hooks/useAutoDiscoveryInfo';
-import { livekitSupport } from '../../hooks/useLivekitSupport';
+import { useLivekitSupport } from '../../hooks/useLivekitSupport';
 import { StateEvent } from '../../../types/matrix/room';
 import { webRTCSupported } from '../../utils/rtc';
 
@@ -286,7 +285,7 @@ export function RoomNavItem({
   const startCall = useCallStart(direct);
   const callEmbed = useCallEmbed();
   const callPref = useAtomValue(useCallPreferencesAtom());
-  const autoDiscoveryInfo = useAutoDiscoveryInfo();
+  const livekitSupported = useLivekitSupport();
 
   const handleStartCall: MouseEventHandler<HTMLAnchorElement> = (evt) => {
     const powerLevelsEvent = getStateEvent(room, StateEvent.RoomPowerLevels);
@@ -300,7 +299,7 @@ export function RoomNavItem({
     );
 
     // Do not join if missing permissions or no livekit support or no webRTC support
-    if (!hasCallPermission || !livekitSupport(autoDiscoveryInfo) || !webRTCSupported()) {
+    if (!hasCallPermission || !livekitSupported || !webRTCSupported()) {
       return;
     }
 

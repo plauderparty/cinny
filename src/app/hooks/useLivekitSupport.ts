@@ -1,16 +1,33 @@
-import { AutoDiscoveryInfo } from '../cs-api';
+import { useEffect, useState } from 'react';
 import { useAutoDiscoveryInfo } from './useAutoDiscoveryInfo';
+import { useMatrixClient } from './useMatrixClient';
+import {
+  fetchRtcTransports,
+  hasLivekitTransport,
+  rtcFociFromWellKnown,
+} from '../plugins/call/rtcTransports';
 
-export const livekitSupport = (autoDiscoveryInfo: AutoDiscoveryInfo): boolean => {
-  const rtcFoci = autoDiscoveryInfo['org.matrix.msc4143.rtc_foci'];
-
-  return (
-    Array.isArray(rtcFoci) && rtcFoci.some((info) => typeof info.livekit_service_url === 'string')
-  );
-};
-
+/** LiveKit via .well-known or MSC4143 `/rtc/transports`. */
 export const useLivekitSupport = (): boolean => {
-  const autoDiscoveryInfo = useAutoDiscoveryInfo();
+  const discovery = useAutoDiscoveryInfo();
+  const mx = useMatrixClient();
+  const fromWellKnown = hasLivekitTransport(rtcFociFromWellKnown(discovery));
+  const [fromEndpoint, setFromEndpoint] = useState(false);
 
-  return livekitSupport(autoDiscoveryInfo);
+  useEffect(() => {
+    if (fromWellKnown) return undefined;
+
+    let cancelled = false;
+    fetchRtcTransports(mx).then((transports) => {
+      if (!cancelled && hasLivekitTransport(transports)) {
+        setFromEndpoint(true);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mx, fromWellKnown]);
+
+  return fromWellKnown || fromEndpoint;
 };

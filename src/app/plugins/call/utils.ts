@@ -20,6 +20,9 @@ export function getCallCapabilities(
   capabilities.add(MatrixCapabilities.MSC3846TurnServers);
   capabilities.add(MatrixCapabilities.MSC4157SendDelayedEvent);
   capabilities.add(MatrixCapabilities.MSC4157UpdateDelayedEvent);
+  capabilities.add(MatrixCapabilities.MSC4515RtcTransports);
+  capabilities.add(MatrixCapabilities.MSC4407SendStickyEvent);
+  capabilities.add(MatrixCapabilities.MSC4407ReceiveStickyEvent);
   capabilities.add(`org.matrix.msc2762.timeline:${roomId}`);
   capabilities.add(`org.matrix.msc2762.state:${roomId}`);
 
@@ -36,41 +39,20 @@ export function getCallCapabilities(
     WidgetEventCapability.forStateEvent(EventDirection.Receive, EventType.RoomName).raw
   );
 
-  capabilities.add(
-    WidgetEventCapability.forStateEvent(
-      EventDirection.Send,
-      'org.matrix.msc3401.call.member',
-      userId
-    ).raw
-  );
-  capabilities.add(
-    WidgetEventCapability.forStateEvent(
-      EventDirection.Send,
-      'org.matrix.msc3401.call.member',
-      `_${userId}_${deviceId}_m.call`
-    ).raw
-  );
-  capabilities.add(
-    WidgetEventCapability.forStateEvent(
-      EventDirection.Send,
-      'org.matrix.msc3401.call.member',
-      `${userId}_${deviceId}_m.call`
-    ).raw
-  );
-  capabilities.add(
-    WidgetEventCapability.forStateEvent(
-      EventDirection.Send,
-      'org.matrix.msc3401.call.member',
-      `_${userId}_${deviceId}`
-    ).raw
-  );
-  capabilities.add(
-    WidgetEventCapability.forStateEvent(
-      EventDirection.Send,
-      'org.matrix.msc3401.call.member',
-      `${userId}_${deviceId}`
-    ).raw
-  );
+  // Membership state keys Element Call requests (legacy userId + session forms).
+  [
+    userId,
+    `_${userId}_${deviceId}_m.call`,
+    `${userId}_${deviceId}_m.call`,
+  ].forEach((stateKey) => {
+    capabilities.add(
+      WidgetEventCapability.forStateEvent(
+        EventDirection.Send,
+        'org.matrix.msc3401.call.member',
+        stateKey
+      ).raw
+    );
+  });
 
   capabilities.add(
     WidgetEventCapability.forStateEvent(EventDirection.Receive, 'org.matrix.msc3401.call.member')

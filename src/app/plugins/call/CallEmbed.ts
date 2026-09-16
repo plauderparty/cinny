@@ -106,6 +106,7 @@ export class CallEmbed {
       lang: 'en-EN',
       theme: themeKind,
       header: 'none',
+      background: 'solid',
     });
 
     if (!room.isCallRoom() && CallEmbed.startingCall(intent)) {

@@ -4,6 +4,7 @@ import {
   type ISendEventDetails,
   type IReadEventRelationsResult,
   type IRoomEvent,
+  type IRtcTransportsResult,
   WidgetDriver,
   type IWidgetApiErrorResponseDataDetails,
   type ISearchUserDirectoryResult,
@@ -24,6 +25,7 @@ import {
   MatrixClient,
 } from 'matrix-js-sdk';
 import { getCallCapabilities } from './utils';
+import { discoverRtcTransports } from './rtcTransports';
 import { downloadMedia, mxcUrlToHttp } from '../../utils/matrix';
 
 export class CallWidgetDriver extends WidgetDriver {
@@ -48,28 +50,29 @@ export class CallWidgetDriver extends WidgetDriver {
 
   public async sendEvent(
     eventType: string,
-    content: IContent,
+    content: unknown,
     stateKey: string | null = null,
     targetRoomId: string | null = null
   ): Promise<ISendEventDetails> {
     const roomId = targetRoomId || this.inRoomId;
+    const eventContent = content as IContent;
 
     let r: { event_id: string } | null;
     if (typeof stateKey === 'string') {
       r = await this.mx.sendStateEvent(
         roomId,
         eventType as keyof StateEvents,
-        content as StateEvents[keyof StateEvents],
+        eventContent as StateEvents[keyof StateEvents],
         stateKey
       );
     } else if (eventType === EventType.RoomRedaction) {
       // special case: extract the `redacts` property and call redact
-      r = await this.mx.redactEvent(roomId, content.redacts);
+      r = await this.mx.redactEvent(roomId, eventContent.redacts);
     } else {
       r = await this.mx.sendEvent(
         roomId,
         eventType as keyof TimelineEvents,
-        content as TimelineEvents[keyof TimelineEvents]
+        eventContent as TimelineEvents[keyof TimelineEvents]
       );
     }
 
@@ -77,47 +80,32 @@ export class CallWidgetDriver extends WidgetDriver {
   }
 
   public async sendDelayedEvent(
-    delay: number | null,
-    parentDelayId: string | null,
+    delay: number,
     eventType: string,
-    content: IContent,
+    content: unknown,
     stateKey: string | null = null,
     targetRoomId: string | null = null
   ): Promise<ISendDelayedEventDetails> {
     const roomId = targetRoomId || this.inRoomId;
-
-    let delayOpts;
-    if (delay !== null) {
-      delayOpts = {
-        delay,
-        ...(parentDelayId !== null && { parent_delay_id: parentDelayId }),
-      };
-    } else if (parentDelayId !== null) {
-      delayOpts = {
-        parent_delay_id: parentDelayId,
-      };
-    } else {
-      throw new Error('Must provide at least one of delay or parentDelayId');
-    }
+    const delayOpts = { delay };
+    const eventContent = content as IContent;
 
     let r: SendDelayedEventResponse | null;
     if (stateKey !== null) {
-      // state event
       r = await this.mx._unstable_sendDelayedStateEvent(
         roomId,
         delayOpts,
         eventType as keyof StateEvents,
-        content as StateEvents[keyof StateEvents],
+        eventContent as StateEvents[keyof StateEvents],
         stateKey
       );
     } else {
-      // message event
       r = await this.mx._unstable_sendDelayedEvent(
         roomId,
         delayOpts,
         null,
         eventType as keyof TimelineEvents,
-        content as TimelineEvents[keyof TimelineEvents]
+        eventContent as TimelineEvents[keyof TimelineEvents]
       );
     }
 
@@ -125,6 +113,10 @@ export class CallWidgetDriver extends WidgetDriver {
       roomId,
       delayId: r.delay_id,
     };
+  }
+
+  public async getRtcTransports(): Promise<IRtcTransportsResult> {
+    return { rtc_transports: await discoverRtcTransports(this.mx) };
   }
 
   public async cancelScheduledDelayedEvent(delayId: string): Promise<void> {
