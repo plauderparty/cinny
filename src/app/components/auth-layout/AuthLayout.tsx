@@ -15,9 +15,10 @@ import * as css from './styles.css';
 import * as PatternsCss from '../../styles/Patterns.css';
 import CinnySVG from '../../../../public/res/svg/cinny.svg';
 import { AuthFooter } from './AuthFooter';
+import { APP_NAME } from '../../branding';
 
 export function AuthLogo({ large }: { large?: boolean }) {
-  return <img className={css.AuthLogo({ large })} src={CinnySVG} alt="Cinny Logo" />;
+  return <img className={css.AuthLogo({ large })} src={CinnySVG} alt={`${APP_NAME} Logo`} />;
 }
 
 type AuthLayoutProps = {

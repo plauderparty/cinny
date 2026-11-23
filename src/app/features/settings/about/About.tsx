@@ -16,6 +16,7 @@ import { SettingTile } from '../../../components/setting-tile';
 import CinnySVG from '../../../../../public/res/svg/cinny.svg';
 import { clearNavToActivePathStore } from '../../../state/navToActivePath';
 import { useClient } from '../../../hooks/useClient';
+import { APP_NAME, SOURCE_URL, VERSION, WEBSITE_URL } from '../../../branding';
 
 type AboutProps = {
   requestClose: () => void;
@@ -53,22 +54,22 @@ export function About({ requestClose }: AboutProps) {
                   <img
                     style={{ width: toRem(60), height: toRem(60) }}
                     src={CinnySVG}
-                    alt="Cinny logo"
+                    alt={`${APP_NAME} logo`}
                   />
                 </Box>
                 <Box direction="Column" gap="300">
                   <Box direction="Column" gap="100">
                     <Box gap="100" alignItems="End">
-                      <Text size="H3">Cinny</Text>
-                      <Text size="T200">v4.12.8</Text>
+                      <Text size="H3">{APP_NAME}</Text>
+                      <Text size="T200">{VERSION}</Text>
                     </Box>
-                    <Text>Yet another matrix client.</Text>
+                    <Text>Plauder.Party Matrix client.</Text>
                   </Box>
 
                   <Box gap="200" wrap="Wrap">
                     <Button
                       as="a"
-                      href="https://github.com/cinnyapp/cinny"
+                      href={SOURCE_URL}
                       rel="noreferrer noopener"
                       target="_blank"
                       variant="Secondary"
@@ -81,7 +82,7 @@ export function About({ requestClose }: AboutProps) {
                     </Button>
                     <Button
                       as="a"
-                      href="https://cinny.in/#sponsor"
+                      href={WEBSITE_URL}
                       rel="noreferrer noopener"
                       target="_blank"
                       variant="Critical"
@@ -90,7 +91,7 @@ export function About({ requestClose }: AboutProps) {
                       radii="300"
                       before={<Icon src={Icons.Heart} size="100" filled />}
                     >
-                      <Text size="B300">Support</Text>
+                      <Text size="B300">Website</Text>
                     </Button>
                   </Box>
                 </Box>

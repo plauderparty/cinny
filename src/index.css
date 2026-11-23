@@ -31,9 +31,12 @@ Please see LICENSE file in root of repository for full details.
   --font-secondary: 'InterVariable', var(--font-emoji), sans-serif;
 }
 
-.dark-theme,
-.butter-theme {
-  --tc-link: hsl(213deg 100% 80%);
+.plauder-light {
+  --tc-link: #4a9b32;
+}
+
+.plauder-dark {
+  --tc-link: #5cb03c;
 
   --mx-uc-1: hsl(208, 100%, 75%);
   --mx-uc-2: hsl(301, 100%, 80%);
@@ -43,8 +46,6 @@ Please see LICENSE file in root of repository for full details.
   --mx-uc-6: hsl(181, 100%, 60%);
   --mx-uc-7: hsl(243, 100%, 80%);
   --mx-uc-8: hsl(94, 100%, 80%);
-
-  --font-secondary: 'InterVariable', var(--font-emoji), sans-serif;
 }
 
 html {

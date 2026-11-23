@@ -8,6 +8,7 @@ Please see LICENSE file in root of repository for full details.
 */
 
 import { UAParser } from 'ua-parser-js';
+import { DEVICE_DISPLAY_NAME } from '../branding';
 
 export const ua = () => UAParser(window.navigator.userAgent);
 
@@ -26,14 +27,14 @@ export const getInitialDeviceDisplayName = (): string => {
   const osName = ua().os.name;
 
   if (browserName && osName) {
-    return `Cinny Web - ${ua().browser.name} (${ua().os.name})`;
+    return `${DEVICE_DISPLAY_NAME} - ${ua().browser.name} (${ua().os.name})`;
   }
   if (browserName) {
-    return `Cinny Web - ${ua().browser.name}`;
+    return `${DEVICE_DISPLAY_NAME} - ${ua().browser.name}`;
   }
   if (osName) {
-    return `Cinny Web (${ua().os.name})`;
+    return `${DEVICE_DISPLAY_NAME} (${ua().os.name})`;
   }
 
-  return 'Cinny Web';
+  return DEVICE_DISPLAY_NAME;
 };

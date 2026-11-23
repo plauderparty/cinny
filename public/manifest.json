@@ -1,14 +1,14 @@
 {
-  "name": "Cinny",
-  "short_name": "Cinny",
-  "description": "Yet another matrix client",
+  "name": "Plauder.Party App",
+  "short_name": "Plauder.Party",
+  "description": "Plauder.Party Matrix client",
   "dir": "auto",
   "lang": "en-US",
   "display": "standalone",
   "orientation": "portrait",
   "start_url": "./",
-  "background_color": "#fff",
-  "theme_color": "#fff",
+  "background_color": "#FDFEFC",
+  "theme_color": "#4A9B32",
   "icons": [
     {
       "src": "./public/android/android-chrome-36x36.png",

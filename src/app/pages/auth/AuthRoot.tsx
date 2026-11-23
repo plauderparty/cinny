@@ -35,6 +35,7 @@ import { AuthFlowsProvider } from '../../hooks/useAuthFlows';
 import { AuthServerProvider } from '../../hooks/useAuthServer';
 import { tryDecodeURIComponent } from '../../utils/dom';
 import { AuthLayout, AuthLogo } from '../../components/auth-layout';
+import { APP_NAME } from '../../branding';
 import { useUnauthThemeManager } from '../ThemeManager';
 import { useSessions } from '../../hooks/useSessions';
 import { getRootPath } from '../pathUtils';
@@ -138,7 +139,7 @@ export function AuthRoot() {
         <Box grow="Yes" direction="Row" gap="300" alignItems="Center">
           <AuthLogo />
           <Box grow="Yes">
-            <Text size="H3">Cinny</Text>
+            <Text size="H3">{APP_NAME}</Text>
           </Box>
           {sessions.length > 0 && (
             <Chip

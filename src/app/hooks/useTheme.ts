@@ -7,10 +7,9 @@ https://cinny.in
 Please see LICENSE file in root of repository for full details.
 */
 
-import { lightTheme } from 'folds';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { onDarkFontWeight, onLightFontWeight } from '../../config.css';
-import { butterTheme, darkTheme, silverTheme } from '../../colors.css';
+import { plauderDarkTheme, plauderLightTheme } from '../../plauderTheme.css';
 import { useSetting } from '../state/hooks/settings';
 
 export enum ThemeKind {
@@ -24,41 +23,27 @@ export type Theme = {
   classNames: string[];
 };
 
+/** Plauder light — replaces upstream Light as the default light theme. */
 export const LightTheme: Theme = {
-  id: 'light-theme',
+  id: 'plauder-light',
   kind: ThemeKind.Light,
-  classNames: [lightTheme, onLightFontWeight, 'prism-light'],
+  classNames: ['plauder-light', plauderLightTheme, onLightFontWeight, 'prism-light'],
 };
 
-export const SilverTheme: Theme = {
-  id: 'silver-theme',
-  kind: ThemeKind.Light,
-  classNames: ['silver-theme', silverTheme, onLightFontWeight, 'prism-light'],
-};
+/** Plauder dark — replaces upstream Dark as the default dark theme. */
 export const DarkTheme: Theme = {
-  id: 'dark-theme',
+  id: 'plauder-dark',
   kind: ThemeKind.Dark,
-  classNames: ['dark-theme', darkTheme, onDarkFontWeight, 'prism-dark'],
-};
-export const ButterTheme: Theme = {
-  id: 'butter-theme',
-  kind: ThemeKind.Dark,
-  classNames: ['butter-theme', butterTheme, onDarkFontWeight, 'prism-dark'],
+  classNames: ['plauder-dark', plauderDarkTheme, onDarkFontWeight, 'prism-dark'],
 };
 
-export const useThemes = (): Theme[] => {
-  const themes: Theme[] = useMemo(() => [LightTheme, SilverTheme, DarkTheme, ButterTheme], []);
-
-  return themes;
-};
+export const useThemes = (): Theme[] => useMemo(() => [LightTheme, DarkTheme], []);
 
 export const useThemeNames = (): Record<string, string> =>
   useMemo(
     () => ({
       [LightTheme.id]: 'Light',
-      [SilverTheme.id]: 'Silver',
       [DarkTheme.id]: 'Dark',
-      [ButterTheme.id]: 'Butter',
     }),
     []
   );
@@ -92,17 +77,12 @@ export const useActiveTheme = (): Theme => {
   const [darkThemeId] = useSetting('darkThemeId');
 
   if (!systemTheme) {
-    const selectedTheme = themes.find((theme) => theme.id === themeId) ?? LightTheme;
-
-    return selectedTheme;
+    return themes.find((theme) => theme.id === themeId) ?? LightTheme;
   }
 
-  const selectedTheme =
-    systemThemeKind === ThemeKind.Dark
-      ? themes.find((theme) => theme.id === darkThemeId) ?? DarkTheme
-      : themes.find((theme) => theme.id === lightThemeId) ?? LightTheme;
-
-  return selectedTheme;
+  return systemThemeKind === ThemeKind.Dark
+    ? themes.find((theme) => theme.id === darkThemeId) ?? DarkTheme
+    : themes.find((theme) => theme.id === lightThemeId) ?? LightTheme;
 };
 
 const ThemeContext = createContext<Theme | null>(null);

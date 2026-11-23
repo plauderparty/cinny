@@ -13,6 +13,7 @@ import classNames from 'classnames';
 import * as patternsCSS from '../../styles/Patterns.css';
 import * as css from './SplashScreen.css';
 import CinnySVG from '../../../../public/res/svg/cinny.svg';
+import { APP_NAME } from '../../branding';
 
 type SplashScreenProps = {
   footer?: ReactNode;
@@ -26,9 +27,9 @@ export function SplashScreen({ footer, children }: SplashScreenProps) {
     >
       {children || (
         <Box grow="Yes" direction="Column" alignItems="Center" justifyContent="Center" gap="400">
-          <img className={css.SplashLogo} src={CinnySVG} alt="Cinny Logo" />
+          <img className={css.SplashLogo} src={CinnySVG} alt={`${APP_NAME} Logo`} />
           <Text size="H2" align="Center">
-            Cinny
+            {APP_NAME}
           </Text>
         </Box>
       )}

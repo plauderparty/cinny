@@ -19,6 +19,7 @@ import { getNotificationState, usePermissionState } from '../../../hooks/usePerm
 import { useEmailNotifications } from '../../../hooks/useEmailNotifications';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
 import { useClient } from '../../../hooks/useClient';
+import { APP_NAME } from '../../../branding';
 
 function EmailNotification() {
   const ct = useClient();
@@ -38,7 +39,7 @@ function EmailNotification() {
                 device_display_name: email,
                 lang: 'en',
                 data: {
-                  brand: 'Cinny', // brand field is not in spec.
+                  brand: APP_NAME, // brand field is not in spec.
                 } as PusherData,
                 append: true,
               },
