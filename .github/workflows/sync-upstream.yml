@@ -1,88 +1,40 @@
-name: Sync upstream release
+name: Sync upstream dev
 
 on:
   schedule:
     - cron: '17 6 * * *'
   workflow_dispatch:
     inputs:
-      tag:
-        description: 'Upstream release tag (default: latest)'
+      auto_merge:
+        description: 'Enable auto-merge when the PR is conflict-free'
         required: false
-        type: string
+        default: true
+        type: boolean
 
 permissions:
   contents: write
   pull-requests: write
-  issues: write
+
+concurrency:
+  group: sync-upstream-dev
+  cancel-in-progress: false
 
 jobs:
   sync:
-    name: Merge upstream release into plauder
+    name: Sync upstream dev into plauder
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Checkout plauder
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: plauder
           fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN || github.token }}
 
       - name: Sync
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INPUT_TAG: ${{ inputs.tag }}
-        run: |
-          set -euo pipefail
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote add upstream https://github.com/cinnyapp/cinny.git
-          git fetch upstream --tags
-
-          TAG="${INPUT_TAG:-$(gh api repos/cinnyapp/cinny/releases/latest --jq .tag_name)}"
-          echo "Upstream tag: $TAG"
-
-          if git merge-base --is-ancestor "refs/tags/$TAG" HEAD; then
-            echo "plauder already contains $TAG"
-            exit 0
-          fi
-
-          BRANCH="sync/$TAG"
-          git push origin --delete "$BRANCH" 2>/dev/null || true
-          git checkout -B "$BRANCH"
-
-          if ! git merge --no-ff "refs/tags/$TAG" -m "chore: merge upstream $TAG into plauder"; then
-            git merge --abort || true
-            TITLE="Upstream $TAG failed to merge into plauder"
-            if [ -z "$(gh issue list --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')" ]; then
-              gh issue create --title "$TITLE" --body "$(cat <<EOF
-          Automatic merge of \`cinnyapp/cinny\` \`$TAG\` into \`plauder\` conflicted.
-
-          \`\`\`sh
-          git fetch upstream --tags && git checkout plauder && git pull
-          git merge $TAG
-          # fix conflicts, then: git push origin plauder
-          \`\`\`
-
-          Do not use GitHub "Sync fork" — it tracks upstream \`dev\`, not releases.
-          EOF
-          )"
-            fi
-            exit 1
-          fi
-
-          git push -u origin "$BRANCH" --force-with-lease
-
-          TITLE="Sync Cinny $TAG"
-          BODY="$(cat <<EOF
-          ## Summary
-          - Merge upstream release \`$TAG\` into \`plauder\`
-
-          ## After merge
-          On production: \`/etc/docker/matrix.plauder.party/update-cinny.sh\`
-          EOF
-          )"
-          EXISTING="$(gh pr list --head "$BRANCH" --base plauder --state open --json number --jq '.[0].number // empty')"
-          if [ -n "$EXISTING" ]; then
-            gh pr edit "$EXISTING" --title "$TITLE" --body "$BODY"
-          else
-            gh pr create --base plauder --head "$BRANCH" --title "$TITLE" --body "$BODY"
-          fi
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN || github.token }}
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          AUTO_MERGE: ${{ inputs.auto_merge }}
+        run: bash .github/scripts/sync-upstream.sh
