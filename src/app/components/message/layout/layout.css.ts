@@ -1,3 +1,12 @@
+/*
+Cinny Project
+Copyright 2021-present Ajay Bura
+SPDX-License-Identifier: AGPL-3.0-only
+https://cinny.in
+
+Please see LICENSE file in root of repository for full details.
+*/
+
 import { createVar, keyframes, style, styleVariants } from '@vanilla-extract/css';
 import { recipe, RecipeVariants } from '@vanilla-extract/recipes';
 import { DefaultReset, color, config, toRem } from 'folds';
@@ -112,8 +121,7 @@ export const CompactHeader = style([
   DefaultReset,
   StickySection,
   {
-    maxWidth: toRem(170),
-    width: '100%',
+    width: toRem(170),
   },
 ]);
 
@@ -122,6 +130,7 @@ export const AvatarBase = style({
   transition: 'transform 200ms cubic-bezier(0, 0.8, 0.67, 0.97)',
   display: 'flex',
   alignSelf: 'start',
+  position: 'relative',
 
   selectors: {
     '&:hover': {
@@ -151,6 +160,16 @@ export const BubbleContentArrowLeft = style({
   borderTopLeftRadius: 0,
 });
 
+export const BubbleContentOwn = style({
+  backgroundColor: color.Secondary.ContainerHover,
+  // Keep oversized content scrollable on the right.
+  marginLeft: 'auto',
+});
+
+export const BubbleContentArrowRight = style({
+  borderTopRightRadius: 0,
+});
+
 export const BubbleLeftArrow = style({
   width: toRem(9),
   height: toRem(8),
@@ -159,6 +178,17 @@ export const BubbleLeftArrow = style({
   top: 0,
   left: toRem(-8),
   zIndex: 1,
+});
+
+export const BubbleRightArrow = style({
+  width: toRem(9),
+  height: toRem(8),
+
+  position: 'absolute',
+  top: 0,
+  right: toRem(-8),
+  zIndex: 1,
+  transform: 'scaleX(-1)',
 });
 
 export const Username = style({
@@ -182,6 +212,7 @@ export const UsernameBold = style({
 export const MessageTextBody = recipe({
   base: {
     wordBreak: 'break-word',
+    position: 'relative',
   },
   variants: {
     preWrap: {

@@ -1,7 +1,15 @@
+/*
+Cinny Project
+Copyright 2021-present Ajay Bura
+SPDX-License-Identifier: AGPL-3.0-only
+https://cinny.in
+
+Please see LICENSE file in root of repository for full details.
+*/
+
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { onDarkFontWeight, onLightFontWeight } from '../../config.css';
 import { plauderDarkTheme, plauderLightTheme } from '../../plauderTheme.css';
-import { settingsAtom } from '../state/settings';
 import { useSetting } from '../state/hooks/settings';
 
 export enum ThemeKind {
@@ -63,10 +71,10 @@ export const useSystemThemeKind = (): ThemeKind => {
 export const useActiveTheme = (): Theme => {
   const systemThemeKind = useSystemThemeKind();
   const themes = useThemes();
-  const [systemTheme] = useSetting(settingsAtom, 'useSystemTheme');
-  const [themeId] = useSetting(settingsAtom, 'themeId');
-  const [lightThemeId] = useSetting(settingsAtom, 'lightThemeId');
-  const [darkThemeId] = useSetting(settingsAtom, 'darkThemeId');
+  const [systemTheme] = useSetting('useSystemTheme');
+  const [themeId] = useSetting('themeId');
+  const [lightThemeId] = useSetting('lightThemeId');
+  const [darkThemeId] = useSetting('darkThemeId');
 
   if (!systemTheme) {
     return themes.find((theme) => theme.id === themeId) ?? LightTheme;

@@ -1,33 +1,25 @@
-import { useEffect, useState } from 'react';
+/*
+Cinny Project
+Copyright 2021-present Ajay Bura
+SPDX-License-Identifier: AGPL-3.0-only
+https://cinny.in
+
+Please see LICENSE file in root of repository for full details.
+*/
+
+import { AutoDiscoveryInfo } from '../cs-api';
 import { useAutoDiscoveryInfo } from './useAutoDiscoveryInfo';
-import { useMatrixClient } from './useMatrixClient';
-import {
-  fetchRtcTransports,
-  hasLivekitTransport,
-  rtcFociFromWellKnown,
-} from '../plugins/call/rtcTransports';
 
-/** LiveKit via .well-known or MSC4143 `/rtc/transports`. */
+export const livekitSupport = (autoDiscoveryInfo: AutoDiscoveryInfo): boolean => {
+  const rtcFoci = autoDiscoveryInfo['org.matrix.msc4143.rtc_foci'];
+
+  return (
+    Array.isArray(rtcFoci) && rtcFoci.some((info) => typeof info.livekit_service_url === 'string')
+  );
+};
+
 export const useLivekitSupport = (): boolean => {
-  const discovery = useAutoDiscoveryInfo();
-  const mx = useMatrixClient();
-  const fromWellKnown = hasLivekitTransport(rtcFociFromWellKnown(discovery));
-  const [fromEndpoint, setFromEndpoint] = useState(false);
+  const autoDiscoveryInfo = useAutoDiscoveryInfo();
 
-  useEffect(() => {
-    if (fromWellKnown) return undefined;
-
-    let cancelled = false;
-    fetchRtcTransports(mx).then((transports) => {
-      if (!cancelled && hasLivekitTransport(transports)) {
-        setFromEndpoint(true);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [mx, fromWellKnown]);
-
-  return fromWellKnown || fromEndpoint;
+  return livekitSupport(autoDiscoveryInfo);
 };

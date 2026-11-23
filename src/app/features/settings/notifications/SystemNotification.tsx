@@ -1,46 +1,63 @@
+/*
+Cinny Project
+Copyright 2021-present Ajay Bura
+SPDX-License-Identifier: AGPL-3.0-only
+https://cinny.in
+
+Please see LICENSE file in root of repository for full details.
+*/
+
 import React, { useCallback } from 'react';
 import { Box, Text, Switch, Button, color, Spinner } from 'folds';
-import { IPusherRequest } from 'matrix-js-sdk';
+import { postPushersSet } from 'neurone/lib/api/matrix/client/v3/pushers';
+import { PusherData } from 'neurone/lib/api/types';
 import { SequenceCard } from '../../../components/sequence-card';
 import { SequenceCardStyle } from '../styles.css';
 import { SettingTile } from '../../../components/setting-tile';
 import { useSetting } from '../../../state/hooks/settings';
-import { settingsAtom } from '../../../state/settings';
 import { getNotificationState, usePermissionState } from '../../../hooks/usePermission';
 import { useEmailNotifications } from '../../../hooks/useEmailNotifications';
 import { AsyncStatus, useAsyncCallback } from '../../../hooks/useAsyncCallback';
-import { useMatrixClient } from '../../../hooks/useMatrixClient';
+import { useClient } from '../../../hooks/useClient';
 import { APP_NAME } from '../../../branding';
 
 function EmailNotification() {
-  const mx = useMatrixClient();
+  const ct = useClient();
   const [result, refreshResult] = useEmailNotifications();
 
   const [setState, setEnable] = useAsyncCallback(
     useCallback(
       async (email: string, enable: boolean) => {
         if (enable) {
-          await mx.setPusher({
-            kind: 'email',
-            app_id: 'm.email',
-            pushkey: email,
-            app_display_name: 'Email Notifications',
-            device_display_name: email,
-            lang: 'en',
-            data: {
-              brand: APP_NAME,
-            },
-            append: true,
-          });
+          await ct.requestAuthJSON(
+            postPushersSet({
+              body: {
+                kind: 'email',
+                app_id: 'm.email',
+                pushkey: email,
+                app_display_name: 'Email Notifications',
+                device_display_name: email,
+                lang: 'en',
+                data: {
+                  brand: APP_NAME, // brand field is not in spec.
+                } as PusherData,
+                append: true,
+              },
+            })
+          );
           return;
         }
-        await mx.setPusher({
-          pushkey: email,
-          app_id: 'm.email',
-          kind: null,
-        } as unknown as IPusherRequest);
+        await ct.requestAuthJSON(
+          postPushersSet({
+            body: {
+              pushkey: email,
+              app_id: 'm.email',
+              kind: null,
+            },
+          })
+        );
       },
-      [mx]
+      [ct]
     )
   );
 
@@ -87,11 +104,8 @@ function EmailNotification() {
 
 export function SystemNotification() {
   const notifPermission = usePermissionState('notifications', getNotificationState());
-  const [showNotifications, setShowNotifications] = useSetting(settingsAtom, 'showNotifications');
-  const [isNotificationSounds, setIsNotificationSounds] = useSetting(
-    settingsAtom,
-    'isNotificationSounds'
-  );
+  const [showNotifications, setShowNotifications] = useSetting('showNotifications');
+  const [isNotificationSounds, setIsNotificationSounds] = useSetting('isNotificationSounds');
 
   const requestNotificationPermission = () => {
     window.Notification.requestPermission();

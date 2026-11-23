@@ -1,3 +1,12 @@
+/*
+Cinny Project
+Copyright 2021-present Ajay Bura
+SPDX-License-Identifier: AGPL-3.0-only
+https://cinny.in
+
+Please see LICENSE file in root of repository for full details.
+*/
+
 import { BasePoint, BaseRange, Editor, Element, Point, Range, Text, Transforms } from 'slate';
 import { BlockType, MarkType } from './types';
 import {
@@ -241,15 +250,15 @@ export const getPointUntilChar = (
   return targetPoint;
 };
 
-export const getPrevWorldRange = (editor: Editor): BaseRange | undefined => {
+export const getPrevWordRange = (editor: Editor): BaseRange | undefined => {
   const { selection } = editor;
   if (!selection || !Range.isCollapsed(selection)) return undefined;
   const [cursorPoint] = Range.edges(selection);
-  const worldStartPoint = getPointUntilChar(editor, cursorPoint, {
+  const wordStartPoint = getPointUntilChar(editor, cursorPoint, {
     reverse: true,
-    match: (char) => char === ' ',
+    match: (char) => char === ' ' || char === '',
   });
-  return worldStartPoint && Editor.range(editor, worldStartPoint, cursorPoint);
+  return wordStartPoint && Editor.range(editor, wordStartPoint, cursorPoint);
 };
 
 export const isEmptyEditor = (editor: Editor): boolean => {
