@@ -13,9 +13,36 @@ export GH_REPO="${GH_REPO:-${GITHUB_REPOSITORY:?GITHUB_REPOSITORY must be set}}"
 
 # Auto-merge needs PR CI. PRs created with GITHUB_TOKEN do not trigger it.
 if [ -z "${SYNC_TOKEN:-}" ]; then
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    echo "::error::SYNC_TOKEN is not configured. Add a fine-grained PAT with Contents, Pull requests, and Workflows read/write."
+    exit 1
+  fi
   echo "::warning::SYNC_TOKEN is not set; disabling auto-merge because GITHUB_TOKEN-created PRs do not trigger pull_request workflows."
   AUTO_MERGE=false
+else
+  # Outside Actions, actions/checkout is not there to configure git auth.
+  # Use SYNC_TOKEN for both git and gh so a local run matches Actions.
+  export GH_TOKEN="${GH_TOKEN:-$SYNC_TOKEN}"
+  if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${GIT_CONFIG_COUNT:-}" ]; then
+    AUTH="$(printf 'x-access-token:%s' "$SYNC_TOKEN" | base64 | tr -d '\n')"
+    export GIT_CONFIG_COUNT=1
+    export GIT_CONFIG_KEY_0="http.https://github.com/.extraheader"
+    export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH}"
+  fi
 fi
+
+push_or_explain() {
+  if git push "$@"; then
+    return 0
+  fi
+  cat >&2 <<'EOF'
+::error::Git push failed. If GitHub rejected it for workflow permissions, the git token cannot update .github/workflows/*.
+Use a token with "Workflows: Read and write" (fine-grained PAT or GitHub App) or the "workflow" scope (classic PAT).
+Local run: SYNC_TOKEN=<token> bash .github/scripts/sync-upstream.sh
+GitHub Actions: store the token as the SYNC_TOKEN secret.
+EOF
+  return 1
+}
 
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -75,7 +102,7 @@ if git fetch origin dev --prune >/dev/null 2>&1 \
   echo "::error::origin/dev has commits that are not in upstream/dev. Refusing to overwrite it."
   exit 1
 fi
-git push origin "${TARGET_SHA}:refs/heads/dev"
+push_or_explain origin "${TARGET_SHA}:refs/heads/dev"
 
 if git merge-base --is-ancestor "$TARGET_SHA" "refs/heads/${BASE_BRANCH}"; then
   echo "${BASE_BRANCH} already contains upstream dev (${TARGET_SHORT})."
@@ -183,7 +210,7 @@ fi
 # The branch is bot-owned and only reused after a failed run, so force-with-lease
 # after a fetch is safe and avoids stale branches.
 git fetch origin "$BRANCH" >/dev/null 2>&1 || true
-git push --force-with-lease origin "$BRANCH"
+push_or_explain --force-with-lease origin "$BRANCH"
 
 STATUS="needs manual conflict resolution"
 if [ "$MERGED" = true ]; then

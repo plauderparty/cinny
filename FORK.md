@@ -33,6 +33,19 @@ runs daily and can be started manually. It calls
 Manual runs always sync the latest `dev`; the only input is `auto_merge`, which
 can be set to `false` to skip auto-merge.
 
+### Running locally
+
+Use a token with Contents, Pull requests, and Workflows read/write:
+
+```sh
+SYNC_TOKEN=<token> bash .github/scripts/sync-upstream.sh
+```
+
+Outside Actions, the script uses `SYNC_TOKEN` for both `git` and `gh`. In
+Actions, `actions/checkout` and `GH_TOKEN` already use it. The token **must** be
+allowed to update `.github/workflows/*`, because upstream `dev` changes those
+files.
+
 ## Conflicts
 
 Only paths in `ALLOW_OURS` in the sync script may be auto-resolved. It currently
@@ -82,11 +95,12 @@ One-time setup on `plauderparty/cinny`:
    secret with these repository permissions:
    - Contents: read/write
    - Pull requests: read/write
-   - Workflows: read/write
+   - Workflows: read/write (upstream `dev` changes `.github/workflows/*`)
 
-`GITHUB_TOKEN` cannot drive the full flow: PRs created with it do not trigger
-`pull_request` workflows, so `Plauder build` would never run. The workflow falls
-back to `GITHUB_TOKEN` but disables auto-merge and warns.
+`GITHUB_TOKEN` cannot drive this workflow. It is a GitHub App token without
+permission to update `.github/workflows/*`, and PRs created with it do not
+trigger `pull_request` workflows. The workflow fails early if `SYNC_TOKEN` is
+missing.
 
 `dev` must not be protected in a way that blocks the fast-forward push. Only
 `plauder` needs the PR ruleset.
@@ -163,6 +177,13 @@ git push origin --delete sync/dev-<sha>
   repository inactivity; run the workflow manually to restart.
 - **`dev` fast-forward failed:** `dev` has commits not in upstream. Reconcile it
   manually; the workflow refuses to force-push it.
+- **`refusing to allow a GitHub App to create or update workflow ... without
+workflows permission` or `SYNC_TOKEN is not configured`:** the run used
+  `GITHUB_TOKEN`. Add or update the `SYNC_TOKEN` Actions secret with a
+  fine-grained PAT that has Contents, Pull requests, and Workflows read/write
+  (or a classic PAT with `repo` + `workflow`), then re-run the workflow.
+  `GITHUB_TOKEN` cannot update workflow files. This is required because upstream
+  `dev` changes `.github/workflows/*`.
 - **PR has no `Plauder build` check:** `SYNC_TOKEN` is missing or lacks
   pull-request/workflow permissions, or the PR is a conflicted draft.
 - **Auto-merge not enabled:** check “Allow auto-merge”, the `Plauder build`

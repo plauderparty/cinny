@@ -25,16 +25,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Require SYNC_TOKEN
+        env:
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::error::SYNC_TOKEN is not configured. Add a fine-grained PAT with Contents, Pull requests, and Workflows read/write."
+            exit 1
+          fi
+
       - name: Checkout plauder
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: plauder
           fetch-depth: 0
-          token: ${{ secrets.SYNC_TOKEN || github.token }}
+          token: ${{ secrets.SYNC_TOKEN }}
 
       - name: Sync
         env:
-          GH_TOKEN: ${{ secrets.SYNC_TOKEN || github.token }}
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
           AUTO_MERGE: ${{ inputs.auto_merge }}
         run: bash .github/scripts/sync-upstream.sh
